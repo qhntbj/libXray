@@ -41,12 +41,14 @@ jobs:
         run: |
           python3 build/main.py apple gomobile
           test -d LibXray.xcframework
+          mkdir -p artifact/libxray-apple-gomobile
+          mv LibXray.xcframework artifact/libxray-apple-gomobile/
 
       - name: Upload gomobile artifact
         uses: actions/upload-artifact@v4
         with:
           name: libxray-apple-gomobile
-          path: LibXray.xcframework
+          path: artifact/libxray-apple-gomobile
           if-no-files-found: error
 
   apple-go:
@@ -83,12 +85,14 @@ jobs:
         run: |
           python3 build/main.py apple go
           test -d LibXray.xcframework
+          mkdir -p artifact/libxray-apple-go
+          mv LibXray.xcframework artifact/libxray-apple-go/
 
       - name: Upload go artifact
         uses: actions/upload-artifact@v4
         with:
           name: libxray-apple-go
-          path: LibXray.xcframework
+          path: artifact/libxray-apple-go
           if-no-files-found: error
 
   merge:
@@ -98,10 +102,8 @@ jobs:
       - apple-go
 
     steps:
-      - name: Merge artifacts into one downloadable package
+      - name: Merge into one downloadable artifact
         uses: actions/upload-artifact/merge@v4
         with:
           name: libxray-apple
           pattern: libxray-apple-*
-          separate-directories: true
-          delete-merged: false
