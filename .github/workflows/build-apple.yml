@@ -1,0 +1,63 @@
+name: build-apple
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  apple:
+    runs-on: macos-15
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.25.6'
+          cache: true
+
+      - name: Show environment
+        run: |
+          python3 --version
+          go version
+          xcodebuild -version
+          xcrun --version
+          xcodebuild -showsdks || true
+          xcrun simctl list runtimes || true
+
+      - name: Build apple gomobile
+        run: python3 build/main.py apple gomobile
+
+      - name: Build apple go
+        run: python3 build/main.py apple go
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p out
+          find . -type f \( \
+            -name '*.xcframework' -o \
+            -name '*.framework' -o \
+            -name '*.a' -o \
+            -name '*.h' -o \
+            -name '*.zip' \
+          \) -print0 | xargs -0 -I{} cp -R "{}" out/ || true
+          ls -lah out || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: libxray-apple
+          path: out
+          if-no-files-found: warn
