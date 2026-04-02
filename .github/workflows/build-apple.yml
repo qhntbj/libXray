@@ -38,26 +38,25 @@ jobs:
           xcrun simctl list runtimes || true
 
       - name: Build apple gomobile
-        run: python3 build/main.py apple gomobile
+        run: |
+          python3 build/main.py apple gomobile
+          mkdir -p out
+          mv LibXray.xcframework out/LibXray-gomobile.xcframework
 
       - name: Build apple go
-        run: python3 build/main.py apple go
-
-      - name: Collect artifacts
         run: |
+          python3 build/main.py apple go
           mkdir -p out
-          find . -type f \( \
-            -name '*.xcframework' -o \
-            -name '*.framework' -o \
-            -name '*.a' -o \
-            -name '*.h' -o \
-            -name '*.zip' \
-          \) -print0 | xargs -0 -I{} cp -R "{}" out/ || true
-          ls -lah out || true
+          mv LibXray.xcframework out/LibXray-go.xcframework
+
+      - name: Check outputs
+        run: |
+          ls -lah out
+          find out -maxdepth 2 -print
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: libxray-apple
           path: out
-          if-no-files-found: warn
+          if-no-files-found: error
